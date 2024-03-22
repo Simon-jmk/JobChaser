@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import axios from "axios";
 
 function SearchBar({ inputValue, onInputChange, onSearchClick }) {
   return (
-    <div className='flex justify-between border-2 gap-5'>
-      <img src="https://arbetsformedlingen.se/webdav/files/logo/logo.svg" alt="" />
-      <div className='flex align-center w-96'>
-        <input className='border-2 w-full' type="search" value={inputValue} onChange={onInputChange} />
-        <button className='border-2' onClick={onSearchClick}>Search</button>
+    <div className="flex justify-between border-2 gap-5 bg-blue-950 h-20 mb-10">
+      <img className="object-contain w-96 py-4"
+        src="https://arbetsformedlingen.se/webdav/files/logo/logo-vit.svg"
+        alt=""
+      />
+      <div className="flex self-center h-10 pr-3">
+        <input
+          className="p-2 w-full rounded-s-lg"
+          type="search"
+          value={inputValue}
+          onChange={onInputChange}
+        />
+        <button
+          className="text-blue-950 bg-lime-400 p-2 rounded-e-lg"
+          onClick={onSearchClick}
+        >
+          Search
+        </button>
       </div>
     </div>
   );
@@ -15,13 +28,25 @@ function SearchBar({ inputValue, onInputChange, onSearchClick }) {
 
 function SearchResults({ jobs, loading, error }) {
   const jobList = jobs.map((job) => (
-    <li className="flex align-center mb-10 border-2  gap-2 h-40 bg-blue-900 text-white" key={job.id}>
-      <div className='flex size-40 p-4'>
+    <li
+      className="flex align-center mb-10 border-2 gap-2 h-40 bg-blue-900 text-white mx-12 rounded-3xl"
+      key={job.id}
+    >
+      <div className="flex size-40 p-4 ">
         <img className="object-contain" src={job.logo_url} alt="" />
       </div>
-      <h2 className='self-center'>{job.headline}</h2>
+      <div className="self-center">
+        {job.headline}
+        <br />
+        {job.employer.workplace + " - " + job.workplace_address.municipality}
+        <br />
+        {job.occupation.label}
+        <br />
+        Publicerad {job.publication_date}
+      </div>
     </li>
   ));
+  console.log();
   return (
     <div>
       {loading && <p>Loading jobs...</p>}
@@ -35,14 +60,17 @@ function App() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`https://jobsearch.api.jobtechdev.se/search?q=${inputValue}`);
+      const response = await axios.get(
+        `https://jobsearch.api.jobtechdev.se/search?q=${inputValue}`
+      );
       setJobs(response.data.hits);
       setError(null);
+      console.log(response.data.hits);
     } catch (error) {
       setError(error);
     }
@@ -58,15 +86,13 @@ function App() {
   }
 
   return (
-    <div className='p-4'>
-      <SearchBar 
-        inputValue={inputValue} 
-        onInputChange={handleInputChange} 
-        onSearchClick={handleSearchClick} />
-      <SearchResults 
-        jobs={jobs} 
-        loading={loading} 
-        error={error} />
+    <div>
+      <SearchBar
+        inputValue={inputValue}
+        onInputChange={handleInputChange}
+        onSearchClick={handleSearchClick}
+      />
+      <SearchResults jobs={jobs} loading={loading} error={error} />
     </div>
   );
 }
