@@ -29,11 +29,11 @@ function SearchBar({ inputValue, onInputChange, onSearchClick }) {
 function SearchResults({ jobs, loading, error }) {
   const jobList = jobs.map((job) => (
     <li
-      className="flex align-center mb-10 border-2 gap-2 h-40 bg-blue-900 text-white mx-12 rounded-3xl"
+      className="flex align-center border-2 gap-2 h-40 bg-blue-950 text-white mx-12 rounded-3xl pl-4 m-3"
       key={job.id}
     >
-      <div className="flex size-40 p-4 ">
-        <img className="object-contain" src={job.logo_url} alt="" />
+      <div className="flex size-24 bg-white rounded-full self-center mx-4">
+        <img className="object-contain p-4" src={job.logo_url} alt="" />
       </div>
       <div className="self-center">
         {job.headline}
@@ -51,7 +51,7 @@ function SearchResults({ jobs, loading, error }) {
     <div>
       {loading && <p>Loading jobs...</p>}
       {error && <p>Error fetching jobs: {error.message}</p>}
-      <ul>{jobList}</ul>
+      <ul className="">{jobList}</ul>
     </div>
   );
 }
