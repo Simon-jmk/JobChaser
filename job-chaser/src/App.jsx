@@ -1,10 +1,137 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import { auth } from "./firebase.config";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+
+function SignInModal({ isOpen, toggleModal }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState("signIn");
+
+  const handleSignIn = async (event) => {
+    event.preventDefault();
+
+    const trimmedEmail = email.trim();
+
+    console.log("Attempting to sign in with email:", trimmedEmail);
+
+    try {
+      await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      console.log("User signed in successfully.");
+      toggleModal();
+    } catch (error) {
+      console.error("Error signing in:", error.message);
+    }
+  };
+
+  const handleSignUp = async (event) => {
+    event.preventDefault();
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log("User created successfully:", userCredential);
+      toggleModal();
+    } catch (error) {
+      console.error("Error signing up:", error.message);
+    }
+  };
+
+  const handleSubmit = mode === "signIn" ? handleSignIn : handleSignUp;
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+      <div className="bg-gray-50 rounded-lg shadow dark:border dark:bg-gray-800 dark:border-gray-700 p-6 space-y-4 md:space-y-6 sm:p-8 relative">
+        <button onClick={toggleModal} className="absolute top-0 right-0 m-4">
+          Close
+        </button>
+        <section className="bg-gray-50 dark:bg-gray-900">
+          <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
+            <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+              <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-4 md:space-y-6"
+                >
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      id="email"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="name@email.com"
+                      required=""
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      id="password"
+                      placeholder="••••••••"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      required=""
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-center">
+                    <button
+                      type="submit"
+                      className="bg-lime-400 p-2 rounded-lg w-full mt-2"
+                    >
+                      {mode === "signIn" ? "Sign In" : "Sign Up"}
+                    </button>
+                  </div>
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMode(mode === "signIn" ? "signUp" : "signIn")
+                      }
+                    >
+                      {mode === "signIn"
+                        ? "New user? Sign up"
+                        : "Have an account? Sign In"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
 
 function SearchBar({ inputValue, onInputChange, onSearchClick }) {
   return (
     <div className="flex justify-between border-2 gap-5 bg-blue-950 h-20 mb-10">
-      <img className="object-contain w-96 py-4"
+      <img
+        className="object-contain w-96 py-4"
         src="https://arbetsformedlingen.se/webdav/files/logo/logo-vit.svg"
         alt=""
       />
@@ -61,6 +188,20 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [inputValue, setInputValue] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -85,6 +226,18 @@ function App() {
     fetchJobs();
   }
 
+  const toggleModal = () => setIsModalOpen(!isModalOpen);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      console.log("User signed out successfully.");
+      setIsModalOpen(false); // Optionally close the modal, if it's open
+    } catch (error) {
+      console.error("Error signing out:", error.message);
+    }
+  };
+
   return (
     <div>
       <SearchBar
@@ -92,6 +245,16 @@ function App() {
         onInputChange={handleInputChange}
         onSearchClick={handleSearchClick}
       />
+      {!isLoggedIn ? (
+        <button onClick={toggleModal} className="myButtonStyles">
+          Sign In
+        </button>
+      ) : (
+        <button onClick={handleSignOut} className="myButtonStyles">
+          Sign Out
+        </button>
+      )}
+      <SignInModal isOpen={isModalOpen} toggleModal={toggleModal} />
       <SearchResults jobs={jobs} loading={loading} error={error} />
     </div>
   );
