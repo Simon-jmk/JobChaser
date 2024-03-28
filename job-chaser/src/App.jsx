@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { auth } from "./firebase.config";
 import {
   signInWithEmailAndPassword,
@@ -49,13 +50,13 @@ function SignInModal({ isOpen, toggleModal }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
-      <div className="bg-gray-50 rounded-lg shadow dark:border dark:bg-gray-800 dark:border-gray-700 p-6 space-y-4 md:space-y-6 sm:p-8 relative">
+      <div className="bg-gray-50 rounded-lg shadow p-6 space-y-4 md:space-y-6 sm:p-8 relative">
         <button onClick={toggleModal} className="absolute top-0 right-0 m-4">
           Close
         </button>
-        <section className="bg-gray-50 dark:bg-gray-900">
+        <section className="bg-gray-50">
           <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0">
-            <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+            <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0">
               <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
                 <form
                   onSubmit={handleSubmit}
@@ -72,7 +73,7 @@ function SignInModal({ isOpen, toggleModal }) {
                       type="email"
                       name="email"
                       id="email"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                       placeholder="name@email.com"
                       required=""
                       value={email}
@@ -91,7 +92,7 @@ function SignInModal({ isOpen, toggleModal }) {
                       name="password"
                       id="password"
                       placeholder="••••••••"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
                       required=""
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -107,6 +108,7 @@ function SignInModal({ isOpen, toggleModal }) {
                   </div>
                   <div className="flex justify-center">
                     <button
+                      
                       type="button"
                       onClick={() =>
                         setMode(mode === "signIn" ? "signUp" : "signIn")
@@ -127,7 +129,14 @@ function SignInModal({ isOpen, toggleModal }) {
   );
 }
 
-function SearchBar({ inputValue, onInputChange, onSearchClick }) {
+function SearchBar({
+  inputValue,
+  onInputChange,
+  onSearchClick,
+  isLoggedIn,
+  onSignInClick,
+  onSignOutClick,
+}) {
   return (
     <div className="flex justify-between border-2 gap-5 bg-blue-950 h-20 mb-10">
       <img
@@ -135,6 +144,7 @@ function SearchBar({ inputValue, onInputChange, onSearchClick }) {
         src="https://arbetsformedlingen.se/webdav/files/logo/logo-vit.svg"
         alt=""
       />
+
       <div className="flex self-center h-10 pr-3">
         <input
           className="p-2 w-full rounded-s-lg"
@@ -148,6 +158,21 @@ function SearchBar({ inputValue, onInputChange, onSearchClick }) {
         >
           Search
         </button>
+        {!isLoggedIn ? (
+          <button
+            onClick={onSignInClick}
+            className="self-center mr-2 text-blue-950 bg-lime-400 p-2 rounded-lg w-32 ml-6"
+          >
+            Sign In
+          </button>
+        ) : (
+          <button
+            onClick={onSignOutClick}
+            className="self-center mr-2 text-blue-950 bg-lime-400 p-2 rounded-lg w-32 ml-6"
+          >
+            Sign Out
+          </button>
+        )}
       </div>
     </div>
   );
@@ -244,16 +269,10 @@ function App() {
         inputValue={inputValue}
         onInputChange={handleInputChange}
         onSearchClick={handleSearchClick}
+        isLoggedIn={isLoggedIn}
+        onSignInClick={toggleModal}
+        onSignOutClick={handleSignOut}
       />
-      {!isLoggedIn ? (
-        <button onClick={toggleModal} className="myButtonStyles">
-          Sign In
-        </button>
-      ) : (
-        <button onClick={handleSignOut} className="myButtonStyles">
-          Sign Out
-        </button>
-      )}
       <SignInModal isOpen={isModalOpen} toggleModal={toggleModal} />
       <SearchResults jobs={jobs} loading={loading} error={error} />
     </div>
